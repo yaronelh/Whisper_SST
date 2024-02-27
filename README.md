@@ -1,11 +1,15 @@
 # Voice Typing using Whisper on Windows
 
-An implementation of OpenAI Whisper to have on-click dictations using shortcuts similar to Windows Voice Typing.
-When you click the plus button you will be able to dictate whatever you want the computer to write, and once clicking the plus button again the computer will insert the text where your cursor is currently is.
+OpenAI Whisper for on-click dictations using shortcuts, similar to Windows Voice Typing. When you click the plus button, you will be able to dictate whatever you want the computer to write. Once you click the plus button again, the computer will insert the text where your cursor currently is. This is similar to what Windows Voice Typing does, or, if you're familiar, Dragon NaturallySpeaking. You can directly dictate in 99 different languages.
 
-## Description
-
-This project utilizes OpenAI's Whisper model to transcribe audio input in real-time. It supports multiple languages and showcases the integration of various libraries including PyAudio, PyAutoGUI, and others to capture audio, process it, and output the transcription.
+- English
+- Spanish
+- French
+- German
+- Chinese
+- Hebrew
+- Arabic
+- etc.
 
 ## Prerequisites
 
@@ -85,8 +89,9 @@ https://developer.nvidia.com/cudnn
 
 ###  Additional instructions.
 
-The code provides shortcuts for two languages, but you can change the shortcuts or languages to fit your needs.
-by changing this line.
+#### How to change the dictation languages
+
+The code provides shortcuts for two languages (English, and Hebrew), but you can change the shortcuts or languages to fit your needs by changing this line.
 
 ```
 keyboard.add_hotkey('+', lambda: toggle_recording("en"), suppress=True)
