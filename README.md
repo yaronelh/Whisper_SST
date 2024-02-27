@@ -101,22 +101,27 @@ keyboard.add_hotkey('-', lambda: toggle_recording("he"), suppress=True)
 You can find the list of [whispers supported languages here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)
 
 **You can also change the whisper model you want to use by changing this section of code:**
-```
-# Which model do you want to use?
-#   Size	    Parameters	English-only    model	    Multilingual model	Required VRAM	Relative speed
-#   tiny	    39 M	    tiny.en	        tiny	    ~1 GB	                            ~32x
-#   base	    74 M	    base.en	        base	    ~1 GB	                            ~16x
-#   small	    244 M	    small.en	    small	    ~2 GB	                            ~6x
-#   medium	    769 M	    medium.en	    medium	    ~5 GB	                            ~2x
-#   large	    1550 M	    N/A         	large	    ~10 GB	                            1x
-#   large-v2	1550 M	    N/A 	        large-v2    ?                                   ?
-#   large-v3	1550 M	    N/A            	large-v3    ?                                   ?
 
+```
 SelectedModel = "small"
 selected_language = "en"  # Default to English
 print("Loading Whisper model...")
 model = whisper.load_model(SelectedModel)
 ```
+
+ **Available model sizes**
+
+
+| Size      | Parameters | English-only model | Multilingual model | Required VRAM | Relative speed |
+|-----------|------------|--------------------|--------------------|---------------|----------------|
+| tiny      | 39 M       | tiny.en            | tiny               | ~1 GB         | ~32x           |
+| base      | 74 M       | base.en            | base               | ~1 GB         | ~16x           |
+| small     | 244 M      | small.en           | small              | ~2 GB         | ~6x            |
+| medium    | 769 M      | medium.en          | medium             | ~5 GB         | ~2x            |
+| large     | 1550 M     | N/A                | large              | ~10 GB        | 1x             |
+| large-v2  | 1550 M     | N/A                | large-v2           | ?             | ?              |
+| large-v3  | 1550 M     | N/A                | large-v3           | ?             | ?              |
+
 
 Which model to choose is a balance between speed and accuracy, choose whatever works for your machine.
 
