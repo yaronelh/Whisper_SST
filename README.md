@@ -127,3 +127,22 @@ Which model to choose is a balance between speed and accuracy, choose whatever w
 
 ** Note that when running the script for the first time, you would not have any model installed. So the model will be automatically downloaded to your computer. In addition each time you change a model, and it doesn't exist, the first thing the script will do is download the model.
 
+ ### Running the script
+
+ Since this is all happening in the command line, to run the script you will go to the folder, you installed the script in, activate your Python virtual environment and run the script.
+
+- Run cmd
+- navigate to the folder you've installed all the components in.
+- Activate the virtual environment.
+  ```
+  venv\Scripts\activate
+  ```
+- Run the file.
+  ```
+  Python STT3.py
+  ```
+
+To sum up, if everything worked correctly, every time you click the plus button, a small red circle will appear next to your mouse cursor. And while this circle is on, you can dictate as much as you want. Once you click the plus button again, the circle will disappear, and the dictation will be inserted in the input field you are currently in.
+
+This is a side project for me. I will try to offer support, but no promises. 
+If you have any questions about the project posted in the X thread over here >> [https://x.com/YaronElharar/status/1762482033375215816](https://x.com/YaronElharar/status/1762482033375215816)
