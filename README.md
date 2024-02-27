@@ -10,9 +10,8 @@ This project utilizes OpenAI's Whisper model to transcribe audio input in real-t
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
-- Python 3.7 or later
+- Python 3.11
 - A compatible GPU for CUDA (if you wish to use GPU acceleration)
-- Linux/Windows/MacOS operating system
 
 ## Installation
 
@@ -94,4 +93,27 @@ keyboard.add_hotkey('+', lambda: toggle_recording("en"), suppress=True)
 keyboard.add_hotkey('-', lambda: toggle_recording("he"), suppress=True)
 ```
 
- You can find the list of [whispers supported languages here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)
+You can find the list of [whispers supported languages here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)
+
+**You can also change the whisper model you want to use by changing this section of code:**
+```
+# Which model do you want to use?
+#   Size	    Parameters	English-only    model	    Multilingual model	Required VRAM	Relative speed
+#   tiny	    39 M	    tiny.en	        tiny	    ~1 GB	                            ~32x
+#   base	    74 M	    base.en	        base	    ~1 GB	                            ~16x
+#   small	    244 M	    small.en	    small	    ~2 GB	                            ~6x
+#   medium	    769 M	    medium.en	    medium	    ~5 GB	                            ~2x
+#   large	    1550 M	    N/A         	large	    ~10 GB	                            1x
+#   large-v2	1550 M	    N/A 	        large-v2    ?                                   ?
+#   large-v3	1550 M	    N/A            	large-v3    ?                                   ?
+
+SelectedModel = "small"
+selected_language = "en"  # Default to English
+print("Loading Whisper model...")
+model = whisper.load_model(SelectedModel)
+```
+
+Which model to choose is a balance between speed and accuracy, choose whatever works for your machine.
+
+** Note that when running the script for the first time, you would not have any model installed. So the model will be automatically downloaded to your computer. In addition each time you change a model, and it doesn't exist, the first thing the script will do is download the model.
+
