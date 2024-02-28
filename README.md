@@ -23,21 +23,21 @@ Before you begin, ensure you have met the following requirements:
 
 Start by cloning the project to your local machine:
 
-```
+```cmd
 git clone https://your-repository-link-here
 cd your-project-folder
 ```
 ### Step 2: Set up a Python virtual environment
 It's recommended to use a virtual environment for Python projects. This keeps dependencies required by different projects separate by creating isolated environments for them. To set up a virtual environment, run:
 
-```
+```cmd
 python3 -m venv venv
 ```
 
 ### Step 3: Activate the virtual environment
 Activate the virtual environment with:
 
-```
+```cmd
 venv\Scripts\activate
 ```
 
@@ -46,7 +46,7 @@ Install the required Python libraries with:
 
 Run the pip command for each of those, make sure you're in your virtual environment.
 
-```
+```cmd
 pip install PyAudio
 pip install whisper
 pip install keyboard
@@ -71,7 +71,7 @@ pip install tk
 
 **Torch (PyTorch):** An open-source machine learning library developed by Facebook's AI Research lab. It provides a flexible deep learning framework and is widely used for applications in computer vision, natural language processing, and other areas of artificial intelligence.
 
-```
+```cmd
 pip install torch
 ```
 
@@ -93,16 +93,30 @@ https://developer.nvidia.com/cudnn
 
 The code provides shortcuts for two languages (English, and Hebrew), but you can change the shortcuts or languages to fit your needs by changing this line.
 
-```
+```python
 keyboard.add_hotkey('+', lambda: toggle_recording("en"), suppress=True)
 keyboard.add_hotkey('-', lambda: toggle_recording("he"), suppress=True)
 ```
 
 You can find the list of [whispers supported languages here](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)
 
-**You can also change the whisper model you want to use by changing this section of code:**
+If you want to use specific keys and you don't know exactly their names, you can get their scan code number and place it instead of the name of the key or its character 
+for example, In my case I wanted to use the plus button but only the numpad plus button. Not the other one on the keyboard.
 
+You would run this command, and click on any key on your keyboard to get its scan code.
+```cmd
+python -m keyboard
 ```
+
+Then replace the name of the key with its scan code in the Python script 
+```python
+# 78 numpad plus button on my keyboard, yours may differ.
+keyboard.add_hotkey(78 , lambda: toggle_recording("en"), suppress=True)
+```
+
+#### how to change the Whisper model you're using 
+
+```python
 SelectedModel = "small"
 selected_language = "en"  # Default to English
 print("Loading Whisper model...")
@@ -134,11 +148,11 @@ Which model to choose is a balance between speed and accuracy, choose whatever w
 - Run cmd
 - navigate to the folder you've installed all the components in.
 - Activate the virtual environment.
-  ```
+  ```cmd
   venv\Scripts\activate
   ```
 - Run the file.
-  ```
+  ```cmd
   Python STT3.py
   ```
 
