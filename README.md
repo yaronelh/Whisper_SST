@@ -19,16 +19,19 @@ Before you begin, ensure you have met the following requirements:
 
 ## Installation
 
-### Step 1: Clone the repository
+### Step 1: Install Python
 
-Start by cloning the project to your local machine:
+- Visit the official Python website at https://www.python.org/downloads/ and download the Python v3.11.8 from the "looking for a specific release?" section.
+- In the installation process make sure that "Add python.exe to PATH" is checked.
 
-```cmd
-git clone https://your-repository-link-here
-cd your-project-folder
-```
-### Step 2: Set up a Python virtual environment
-It's recommended to use a virtual environment for Python projects. This keeps dependencies required by different projects separate by creating isolated environments for them. To set up a virtual environment, run:
+### Step 2: Preparing the environment
+
+Open a CMD command line and navigate to the folder you would like Whisper_SST to be installed in. If your not sure on [how to navigate a CMD (command line)](https://github.com/yaronelh/Whisper_SST/blob/main/How%20do%20i%20navigate%20in%20a%20Windows%20cmd%20(command%20Line).md) you can use this quick guide I prepared.
+
+**Set up a virtual environment**
+
+let's set up a virtual environment for the project, that will make it possible for you to have multiple Python projects running at the same time with different Python versions and setups.
+This will isolate Whisper_SST to its own area.
 
 ```cmd
 python3 -m venv venv
