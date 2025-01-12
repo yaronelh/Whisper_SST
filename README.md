@@ -1,4 +1,5 @@
 # Voice Typing using Whisper on Windows
+(Written by Yaron Elharar)
 
 OpenAI Whisper for on-click dictations using shortcuts, similar to Windows Voice Typing. When you click the plus button, you will be able to dictate whatever you want the computer to write. Once you click the plus button again, the computer will insert the text where your cursor currently is. This is similar to what Windows Voice Typing does, or, if you're familiar, Dragon NaturallySpeaking. You can directly dictate in 99 different languages.
 
