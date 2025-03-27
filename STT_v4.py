@@ -1,24 +1,31 @@
 # Created by Yaron Elharar
-# version: 0.51
-#
-# Other optimizations to consider 
-# https://cookbook.openai.com/examples/whisper_processing_guide
+# version: 0.58 
+# Last updated: 27/03/2025 (DD/MM/YYYY)
 
 
 import pyaudio
 import wave
 import os
-import whisper
 import keyboard
 import pyperclip
 import pyautogui
 import threading
 import torch
 import tkinter as tk
-from tkinter import Toplevel
 import time
 import queue
-import re 
+import re
+from faster_whisper import WhisperModel
+from tkinter import Toplevel
+
+torch.set_float32_matmul_precision('medium')
+torch.backends.cudnn.benchmark = True
+torch.set_num_threads(4)  # Adjust based on your CPU
+torch.set_num_interop_threads(1)
+
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    torch.backends.cudnn.benchmark = True
 
 message_queue = queue.Queue()
 FORMAT = pyaudio.paInt16
@@ -27,9 +34,11 @@ overlay_window = None
 overlay_visible = False
 model = None
 is_recording = False
-model_last_used_time = None
-temp_directory = "temp"
+model_last_used_time = time.perf_counter()
+appdata_dir = os.path.expandvars("%APPDATA%")
+temp_directory = os.path.join(appdata_dir, "temp-231r57")
 original_clipboard = None
+capitalize_first_use = 0
 
 # 1. Which model do you want to use?
 #   Size	    Parameters	English-only    model	    Multilingual model	Required VRAM	Relative speed
@@ -41,7 +50,9 @@ original_clipboard = None
 #   large-v2	1550 M	    N/A 	        large-v2    ?                                   ?
 #   large-v3	1550 M	    N/A            	large-v3    ?                                   ?
 
-SelectedModel = "base.en"
+#SelectedModel = "base.en"
+#SelectedModel = "medium" #if you need to write in Hebrew 
+SelectedModel = "small.en" #if you need to write in Hebrew 
 selected_language = "en"  # Default to English
 
 # 2. Testing what to use, GPU or CPU 
@@ -51,28 +62,41 @@ print("Loading Whisper model...")
 
 # 3. This needs to be set to your own microphone rate and chunk 
 CHANNELS = 1
-RATE = 48000
-CHUNK = 1024
+RATE = 16000  # Instead of 48000
+CHUNK = 1024   # Instead of 4096
 
 
-# 4. Choose which shortcuts will activate the recordings.
+# 4. Choose the languages that will be transcript
+# List of available languages languages https://github.com/openai/whisper/blob/main/whisper/tokenizer.py
+
+first_language = 'en'
+second_language = 'he'
+
+# 5. Choose which shortcuts will activate the recordings.
 # If you want to know the scan code of a particular key run this command "python -m keyboard", and update the numbers accordingly
 # The numbers below 78 and 74 are the plus and minus scan code of the numpad on my particular keyboard 
 
-keyboard.add_hotkey(78, lambda: toggle_recording("en"), suppress=True)
-keyboard.add_hotkey(74, lambda: toggle_recording("he"), suppress=True)
+first_language_hotkey = 78
+#first_language_hotkey = "+"
+#second_language_hotkey = 74  
 
-# List of available languages languages https://github.com/openai/whisper/blob/main/whisper/tokenizer.py
+#exit_program_key = "F12" # I've written F12 for my own needs, but you can return it to 'esc' to use the escape button 
 
 
-##
+##Okay, let's see how we can handle it basically the same thingdon't see any difference 
 ## Beyond this point change only if you know what your doing 
 ##
 
-start_time = time.time()  # Start time capture
-model = whisper.load_model(SelectedModel).to(device)
-end_time = time.time()  # End time capture
+keyboard.add_hotkey(first_language_hotkey, lambda: toggle_recording(first_language), suppress=True)
+#keyboard.add_hotkey(second_language_hotkey, lambda: toggle_recording(second_language), suppress=True)
+
+
+start_time = time.perf_counter()  # Start time capture
+model = WhisperModel(SelectedModel,device="cuda",compute_type="float16",cpu_threads=4,num_workers=1)
+#model = WhisperModel(SelectedModel,device="cuda",compute_type="int8",cpu_threads=4,num_workers=1) 
+end_time = time.perf_counter()  # End time capture
 print(f"Model loading took {end_time - start_time} seconds")
+print("Model will remain loaded until the application is closed.")
 
 # Ensure temporary directory exists
 if not os.path.exists(temp_directory):
@@ -90,46 +114,59 @@ def toggle_recording(language):
     print(f"Recording {'started' if is_recording else 'stopped'} in {selected_language}")
 
 # Wait for exit signal
-def listen_for_exit():
-    global exit_flag
-    keyboard.wait('esc')
-    exit_flag = True
-    print("Exit signal received.")
+#def listen_for_exit():
+#    global exit_flag
+##    exit_flag = True
+#    print(f"Exit signal received. {exit_program_key}")
 
 # Transcribe audio to text, modified to accept language parameter
 def save_and_transcribe(frames, selected_language):
-    global model, model_last_used_time, original_clipboard, device
+    global model, model_last_used_time, original_clipboard, device, capitalize_first_use
     if not frames:
         print("No audio data recorded.")
         return
-    start_time1 = time.time()  # Start time capture
+    start_time1 = time.perf_counter()  # Start time capture
     temp_audio_file_path = os.path.join(temp_directory, "recording.wav")
     with wave.open(temp_audio_file_path, 'wb') as wf:
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(pyaudio.PyAudio().get_sample_size(FORMAT))
         wf.setframerate(RATE)
         wf.writeframes(b''.join(frames))
-    end_time1 = time.time()  # End time capture
+    end_time1 = time.perf_counter()  # End time capture
     print(f"Preparing audio file took: {end_time1 - start_time1} seconds")
     
     if model is None:
-        model = whisper.load_model(SelectedModel).to(device)
-    model_last_used_time = time.time()
+        model = WhisperModel(SelectedModel,device="cuda",compute_type="float16",cpu_threads=4,num_workers=2)
+    
 
     print("Transcribing...")
-    start_time = time.time()  # Start time capture
-    result = model.transcribe(temp_audio_file_path, language=selected_language)
-    end_time = time.time()  # End time capture
-    transcribed_text = result['text']
+    start_time = time.perf_counter()  # Start time capture
+    segments, info = model.transcribe(temp_audio_file_path, language=selected_language,without_timestamps=True,beam_size=1)
+    #segments, info = model.transcribe(temp_audio_file_path,beam_size=1,language=selected_language)
+    transcribed_text = " ".join([segment.text for segment in segments])
+    print(f"Transcription: {transcribed_text}")
+    end_time = time.perf_counter()  # End time capture
     transcribed_text = re.sub(r'^\s+', '', transcribed_text)
     transcribed_text = re.sub(r'\.+$', ' ', transcribed_text)
+
     #regular expression to lowercase some common words that need to be lower case when in the middle of a sentence 
-    transcribed_text = re.sub('^(?!I |I.*?''|I'')\w', convert_to_lower, transcribed_text)
+    if capitalize_first_use == 0 and (time.perf_counter() - model_last_used_time < 50):
+        capitalize_first_use += 1
+        print("111")
+    elif (time.perf_counter() - model_last_used_time < 10):
+        t = time.perf_counter() - model_last_used_time
+
+        transcribed_text = re.sub('^(?!I |I.*?''|I'')\w', convert_to_lower, transcribed_text)
+        capitalize_first_use += 1
+        print(f"222  -- {t}")
+    else:
+        capitalize_first_use = 0
+        print("3")
+
     print(f"Transcription took {end_time - start_time} seconds")
-    print(f"Transcription: {result['text']}")
     message_queue.put(transcribed_text)
 
-    # After pasting the transcription, restore the original clipboard content
+    # After pasting the transcription, restore the original clipboard content 
     def restore_clipboard():
         global original_clipboard
         pyperclip.copy(original_clipboard)
@@ -137,8 +174,12 @@ def save_and_transcribe(frames, selected_language):
 
     # Schedule the clipboard restoration to ensure it happens after the paste operation
     root.after(100, restore_clipboard)
+    
+    # reset timer of when the last time the model was used
+    print(f"model_last_used_time Test: {model_last_used_time}")
+    model_last_used_time = time.perf_counter()
 
-# Replacement function to convert uppercase letter to lowercase
+# Replacement function to convert uppercase letter to lowercase checking 
 def convert_to_lower(match_obj):
     if match_obj.group() is not None:
         return match_obj.group().lower()
@@ -146,13 +187,13 @@ def convert_to_lower(match_obj):
 
 def process_queue_messages():
     while not message_queue.empty():
-        start_time = time.time()  # Start time capture
+        start_time = time.perf_counter()  # Start time capture
         message = message_queue.get()
         # Perform Tkinter operations or clipboard operations with the message
         pyperclip.copy(message)
         pyautogui.hotkey('ctrl', 'v')
         message_queue.task_done()
-        end_time = time.time()  # End time capture
+        end_time = time.perf_counter()  # End time capture
         print(f" pasting process took {end_time - start_time} seconds")
     # Schedule this function to run again after a short delay
     root.after(100, process_queue_messages)
@@ -221,28 +262,34 @@ def hide_overlay():
 
 # Exit application
 def exit_application():
-    global exit_flag
+    global exit_flag, model
     exit_flag = True
     keyboard.unhook_all_hotkeys()
+    
+    # Properly unload the model when exiting
+    if model:
+        print("Unloading Whisper model on exit...")
+        model = None
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    
     if overlay_window:
         overlay_window.destroy()
 
 # Unload model if unused
 def unload_model_if_unused():
-    global model, model_last_used_time
-    if model and model_last_used_time and (time.time() - model_last_used_time > 120):
-        print("Unloading Whisper model due to inactivity...")
-        model = None
-    if not exit_flag:
-        threading.Timer(30, unload_model_if_unused).start()
+    # This function is kept for compatibility but will not unload the model automatically
+    # The model will only be unloaded when the application exits
+    pass
 
 def main_application_logic():
     global root
     root = tk.Tk()
     root.withdraw()  # This hides the main Tkinter window
-    threading.Thread(target=listen_for_exit, daemon=True).start()
+    #threading.Thread(target=listen_for_exit, daemon=True).start()
     threading.Thread(target=record_audio, daemon=True).start()
-    threading.Thread(target=unload_model_if_unused, daemon=True).start()
+    # Removed the thread that would unload the model automatically
+    # threading.Thread(target=unload_model_if_unused, daemon=True).start()
 
     create_overlay()
 
